@@ -37,6 +37,10 @@ jobs:
           MODIFIED_FILES=$(git diff --name-only origin/main HEAD)
           echo "Modified files: $MODIFIED_FILES"
           echo "::set-output name=files::$MODIFIED_FILES"
+        
+      - name: Debug modified files
+        run: |
+          echo "Modified files: ${{ steps.find_files.outputs.files }}"
         # run: |
         #   # Compare the latest two commits on the main branch
         #   MODIFIED_FILES=$(git diff --name-only HEAD HEAD~1)
