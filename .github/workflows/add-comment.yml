@@ -92,12 +92,12 @@ jobs:
        - name: Create Pull Request
          uses: peter-evans/create-pull-request@v3
          with:
-            token: ${{ secrets.PAN_TOKEN }}
-            branch: "${{ steps.create_branch.outputs.branch }}"
-            title: "Auto-add comment to modified files"
-            body: "This pull request adds auto-generated content."
-            base: main
-            delete-branch: false
+           token: ${{ secrets.PAN_TOKEN }}
+           branch: "${{ steps.create_branch.outputs.branch }}"
+           title: "Auto-add comment to modified files"
+           body: "This pull request adds auto-generated content."
+           base: main
+           delete-branch: false
   
       # - name: Create PR manually
       #   run: |
