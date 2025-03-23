@@ -90,6 +90,20 @@ jobs:
           echo "Pushing branch: ${{ steps.create_branch.outputs.branch }}"
           git push --set-upstream origin "${{ steps.create_branch.outputs.branch }}"
 
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: ${{ steps.create_branch.outputs.branch }}
+          title: "Add auto-generated comments to modified files"
+          body: |
+            This PR adds automatically generated comments to files that were modified in the previous commit.
+            
+            Created by GitHub Actions workflow.
+          labels: automated-pr, documentation
+          draft: false
+
       # - name: Create PR manually
       #   run: |
       #     PR_RESPONSE=$(curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
