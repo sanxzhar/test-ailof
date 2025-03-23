@@ -5,7 +5,9 @@ on:
     branches:
       - main
 
-permissions: write-all
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   add-comment:
@@ -90,7 +92,7 @@ jobs:
        - name: Create Pull Request
          uses: peter-evans/create-pull-request@v3
          with:
-            token: ${{ secrets.GITHUB_TOKEN }}
+            token: ${{ secrets.PAN_TOKEN }}
             branch: "${{ steps.create_branch.outputs.branch }}"
             title: "Auto-add comment to modified files"
             body: "This pull request adds auto-generated content."
