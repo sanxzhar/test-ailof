@@ -1,4 +1,4 @@
-name: Add Test Comment on Push
+ame: Add Test Comment on Push
 
 on:
   push:
@@ -15,53 +15,34 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Setup Git
-        run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "actions@github.com"
-          
+        
       - name: Get modified files
         id: changed-files
         run: |
-          # Get the list of files modified in the last commit
-          MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
-          echo "FILES_CHANGED=$(echo $MODIFIED_FILES | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          # List modified files from the commit
+          git diff-tree --no-commit-id --name-only -r ${{ github.sha }} > modified_files.txt
+          cat modified_files.txt
           
-      - name: Add test comment and create PR
-        id: create-pr
+      - name: Add test comment to files
+        run: |
+          # Add "test" to the end of each modified file
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              echo "Adding test to $file"
+              echo -e "\ntest" >> "$file"
+            fi
+          done < modified_files.txt
+          
+      - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Add test comment to modified files
           branch: add-test-comment
           delete-branch: true
+          base: main
           title: "Add test comment to modified files"
           body: |
             This PR adds a "test" comment at the end of files modified in the latest push.
             
             Automatically created by GitHub Actions.
-          add-paths: |
-            ${{ steps.changed-files.outputs.FILES_CHANGED }}
-          
-      - name: Add "test" to modified files
-        if: steps.create-pr.outputs.pull-request-number
-        run: |
-          # Checkout the PR branch
-          git fetch origin pull/${{ steps.create-pr.outputs.pull-request-number }}/head:add-test-comment
-          git checkout add-test-comment
-          
-          # Process each modified file from previous step
-          for FILE in ${{ steps.changed-files.outputs.FILES_CHANGED }}; do
-            if [ -f "$FILE" ]; then
-              echo -e "\ntest" >> "$FILE"
-              echo "Modified $FILE"
-            fi
-          done
-          
-          # Commit and push changes to PR branch
-          git add .
-          git commit -m "Add test comment to modified files"
-          git push origin add-test-comment
