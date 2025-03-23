@@ -23,9 +23,18 @@ jobs:
           git diff-tree --no-commit-id --name-only -r ${{ github.sha }} > modified_files.txt
           cat modified_files.txt
           
-      - name: Add test comment to files
+      - name: Setup GitHub CLI
         run: |
-          # Add "test" to the end of each modified file
+          # Authenticate gh CLI with the workflow token
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          
+      - name: Add test comment and create PR
+        run: |
+          # Create a new branch
+          BRANCH_NAME="add-test-comment-$(date +%s)"
+          git checkout -b $BRANCH_NAME
+          
+          # Add test to each modified file
           while IFS= read -r file; do
             if [ -f "$file" ]; then
               echo "Adding test to $file"
@@ -33,16 +42,16 @@ jobs:
             fi
           done < modified_files.txt
           
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: Add test comment to modified files
-          branch: add-test-comment
-          delete-branch: true
-          base: main
-          title: "Add test comment to modified files"
-          body: |
-            This PR adds a "test" comment at the end of files modified in the latest push.
-            
-            Automatically created by GitHub Actions.
+          # Configure git
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          # Commit changes
+          git add .
+          git commit -m "Add test comment to modified files"
+          
+          # Push branch using a token with proper permissions
+          git push https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git $BRANCH_NAME
+          
+          # Create PR using GitHub CLI
+          gh pr create --base main --head $BRANCH_NAME --title "Add test comment to modified files" --body "This PR adds a 'test' comment at the end of files modified in the latest push." || echo "PR already exists or could not be created"
