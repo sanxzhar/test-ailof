@@ -23,6 +23,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
       - name: Create new branch
+        id: create_branch
         run: |
           NEW_BRANCH="add-comment-$(date +%Y%m%d%H%M%S)"
           echo "Creating new branch: $NEW_BRANCH"
