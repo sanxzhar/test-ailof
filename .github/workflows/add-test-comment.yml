@@ -1,4 +1,4 @@
-ame: Add Test Comment on Push
+name: Add Test Comment on Push
 
 on:
   push:
