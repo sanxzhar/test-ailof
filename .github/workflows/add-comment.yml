@@ -38,7 +38,7 @@ jobs:
         run: |
           # Compare the current commit with the last commit on the main branch before the push
           git fetch origin main
-          MODIFIED_FILES=$(git diff --name-only HEAD HEAD~1)
+          MODIFIED_FILES=$(git diff --name-only HEAD HEAD~1 | grep -v '^\.github/')
           echo "Modified files: $MODIFIED_FILES"
           echo "::set-output name=files::$MODIFIED_FILES"
         
