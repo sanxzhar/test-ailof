@@ -29,7 +29,6 @@ jobs:
         id: create_branch
         run: |
           NEW_BRANCH="add-comment-$(date +%Y%m%d%H%M%S)"
-          PREVIOUS_HEAD=$(git rev-parse $MAIN_HEAD^)
           echo "Creating new branch: $NEW_BRANCH"
           git checkout -b "$NEW_BRANCH"
           echo "branch=$NEW_BRANCH" >> $GITHUB_OUTPUT
