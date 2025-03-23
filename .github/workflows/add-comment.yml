@@ -33,10 +33,15 @@ jobs:
       - name: Find modified files
         id: find_files
         run: |
-          # Compare the latest two commits on the main branch
-          MODIFIED_FILES=$(git diff --name-only HEAD HEAD~1)
+          # Compare the current commit with the last commit on the main branch before the push
+          MODIFIED_FILES=$(git diff --name-only origin/main HEAD)
           echo "Modified files: $MODIFIED_FILES"
           echo "::set-output name=files::$MODIFIED_FILES"
+        # run: |
+        #   # Compare the latest two commits on the main branch
+        #   MODIFIED_FILES=$(git diff --name-only HEAD HEAD~1)
+        #   echo "Modified files: $MODIFIED_FILES"
+        #   echo "::set-output name=files::$MODIFIED_FILES"
       
       - name: Append comment to modified files
         run: |
