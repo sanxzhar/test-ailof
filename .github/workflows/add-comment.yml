@@ -27,6 +27,7 @@ jobs:
           NEW_BRANCH="add-comment-$(date +%Y%m%d%H%M%S)"
           echo "Creating new branch: $NEW_BRANCH"
           git checkout -b "$NEW_BRANCH"
+          echo "branch=$NEW_BRANCH" >> $GITHUB_OUTPUT
         
       - name: Find modified files
         id: find_files
@@ -52,15 +53,15 @@ jobs:
       
       - name: Push changes
         run: |
-          echo "Pushing branch: $NEW_BRANCH"
-          git push --set-upstream origin "$NEW_BRANCH"
+          echo "Pushing branch: ${{ steps.create_branch.outputs.branch }}"
+          git push --set-upstream origin "${{ steps.create_branch.outputs.branch }}"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Append auto-generated comment to modified files"
-          branch: "$NEW_BRANCH"
+          branch: "${{ steps.create_branch.outputs.branch }}"
           title: "Auto-add comment to modified files"
           body: "This pull request appends an auto-generated comment to the end of modified files."
           base: main
