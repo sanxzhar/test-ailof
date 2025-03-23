@@ -1,0 +1,65 @@
+name: Add Test Comment on Push
+
+on:
+  push:
+    branches:
+      - '**'
+    # Excluding the branch we'll be creating PRs to, to avoid infinite loops
+    branches-ignore:
+      - main
+      
+jobs:
+  add-test-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Get modified files
+        id: changed-files
+        run: |
+          # Get the list of files modified in the last commit
+          MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
+          echo "MODIFIED_FILES<<EOF" >> $GITHUB_ENV
+          echo "$MODIFIED_FILES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          
+      - name: Add test comment to files
+        id: add-comment
+        run: |
+          # Create a new branch for our changes
+          NEW_BRANCH="add-test-comment-$(date +%s)"
+          git checkout -b $NEW_BRANCH
+          
+          # Process each modified file
+          for FILE in $MODIFIED_FILES; do
+            if [ -f "$FILE" ]; then
+              echo -e "\ntest" >> "$FILE"
+              echo "Modified $FILE"
+            fi
+          done
+          
+          # Commit and push changes
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Add test comment to modified files"
+          git push origin $NEW_BRANCH
+          
+          # Save branch name for next step
+          echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
+          
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ env.NEW_BRANCH }}
+          base: main
+          title: "Add test comment to modified files"
+          body: |
+            This PR adds a "test" comment at the end of files modified in the latest push.
+            
+            Automatically created by GitHub Actions.
+          draft: false
