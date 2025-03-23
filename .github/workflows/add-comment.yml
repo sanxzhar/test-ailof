@@ -90,7 +90,7 @@ jobs:
        - name: Create Pull Request
          uses: peter-evans/create-pull-request@v3
          with:
-          token: ${{ secrets.PAT_TOKEN }}  # Use a personal access token with repo permissions
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: "${{ steps.create_branch.outputs.branch }}"
           title: "Auto-add comment to modified files"
           body: "This pull request adds auto-generated content."
