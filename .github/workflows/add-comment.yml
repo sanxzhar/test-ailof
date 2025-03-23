@@ -25,6 +25,7 @@ jobs:
       - name: Create new branch
         run: |
           NEW_BRANCH="add-comment-$(date +%Y%m%d%H%M%S)"
+          echo "Creating new branch: $NEW_BRANCH"
           git checkout -b "$NEW_BRANCH"
         
       - name: Find modified files
@@ -51,6 +52,7 @@ jobs:
       
       - name: Push changes
         run: |
+          echo "Pushing branch: $NEW_BRANCH"
           git push --set-upstream origin "$NEW_BRANCH"
 
       - name: Create Pull Request
