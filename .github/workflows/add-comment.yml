@@ -1,0 +1,61 @@
+name: Add comment
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: write-all
+
+jobs:
+  add-comment:
+    name: Add comment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
+      - name: Create new branch
+        run: |
+          NEW_BRANCH="add-comment-$(date +%Y%m%d%H%M%S)"
+          git checkout -b "$NEW_BRANCH"
+        
+      - name: Find modified files
+        id: find_files
+        run: |
+          MODIFIED_FILES=$(git diff --name-only main)
+          echo "::set-output name=files::$MODIFIED_FILES"
+      
+      - name: Append comment to modified files
+        run: |
+          COMMENT="// Auto-generated comment added by GitHub Actions"
+          for file in ${{ steps.find_files.outputs.files }}; do
+            if [ -f "$file" ]; then
+              echo "$COMMENT" >> "$file"
+            fi
+          done
+      
+      - name: Commit changes
+        run: |
+          git add .
+          git commit -m "Append auto-generated comment to modified files"
+      
+      - name: Push changes
+        run: |
+          git push --set-upstream origin "$NEW_BRANCH"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Append auto-generated comment to modified files"
+          branch: "$NEW_BRANCH"
+          title: "Auto-add comment to modified files"
+          body: "This pull request appends an auto-generated comment to the end of modified files."
+          base: main
+
