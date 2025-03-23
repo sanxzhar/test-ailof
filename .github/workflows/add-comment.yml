@@ -45,11 +45,6 @@ jobs:
       - name: Debug modified files
         run: |
           echo "Modified files: ${{ steps.find_files.outputs.files }}"
-        # run: |
-        #   # Compare the latest two commits on the main branch
-        #   MODIFIED_FILES=$(git diff --name-only HEAD HEAD~1)
-        #   echo "Modified files: $MODIFIED_FILES"
-        #   echo "::set-output name=files::$MODIFIED_FILES"
       
       - name: Append comment to modified files
         run: |
@@ -64,6 +59,11 @@ jobs:
             fi
           done
       
+      - name: Print changes
+        run: |
+          echo "Changes after appending comments:"
+          git diff
+
       - name: Commit changes
         run: |
           git add .
