@@ -55,8 +55,12 @@ jobs:
         run: |
           COMMENT="// Auto-generated comment added by GitHub Actions"
           for file in ${{ steps.find_files.outputs.files }}; do
+            echo "Processing file: $file"
             if [ -f "$file" ]; then
               echo "$COMMENT" >> "$file"
+              echo "Appended comment to $file"
+            else
+              echo "File not found: $file"
             fi
           done
       
