@@ -2,9 +2,6 @@ name: Add Test Comment on Push
 
 on:
   push:
-    branches:
-      - '**'
-    # Excluding the branch we'll be creating PRs to, to avoid infinite loops
     branches-ignore:
       - main
       
