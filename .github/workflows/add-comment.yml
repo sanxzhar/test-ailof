@@ -119,7 +119,7 @@ jobs:
 
             console.log(`Pull request created: ${pr.html_url}`);
 
-      - name: Add comment to PR
+      - name: Add comment to PR at correct position
         uses: actions/github-script@v6
         env:
           COMMENT_LOCATIONS: ${{ env.comment_locations }}
@@ -137,31 +137,101 @@ jobs:
             }
             const prNumber = prs.data[0].number;
 
-            // Fetch the PR diff
+            // Fetch the PR diff and commit ID
             const { data: filesChanged } = await github.rest.pulls.listFiles({ owner, repo, pull_number: prNumber });
+            const { data: commits } = await github.rest.pulls.listCommits({ owner, repo, pull_number: prNumber });
+            const commitId = commits[commits.length - 1].sha; // Latest commit in the PR
 
-            // Parse the diff and match lines
+            // Process comment locations
             const commentLocations = process.env.COMMENT_LOCATIONS.split('|').filter(Boolean);
             for (const location of commentLocations) {
               const [file, line] = location.split(':');
               const fileDetails = filesChanged.find(f => f.filename === file);
               
-              if (!fileDetails) {
-                console.log(`File ${file} not found in PR diff`);
+              if (!fileDetails || !fileDetails.patch) {
+                console.log(`File ${file} not found in PR diff or has no patch.`);
                 continue;
               }
 
-              // Post a comment on the file
+              // Find the correct position in the diff patch
+              const patchLines = fileDetails.patch.split("\n");
+              let position = 0;
+              let currentLine = 0;
+
+              for (const patchLine of patchLines) {
+                if (patchLine.startsWith("@@")) {
+                  const match = patchLine.match(/@@ -\d+,\d+ \+(\d+),\d+ @@/);
+                  if (match) {
+                    currentLine = parseInt(match[1], 10) - 1;
+                  }
+                } else if (!patchLine.startsWith("-")) {
+                  currentLine++;
+                }
+
+                position++;
+                if (currentLine == parseInt(line)) break;
+              }
+
+              if (position === 0) {
+                console.log(`Could not determine patch position for ${file} at line ${line}`);
+                continue;
+              }
+
+              // Post a comment at the correct position
               await github.rest.pulls.createReviewComment({
                 owner,
                 repo,
                 pull_number: prNumber,
+                commit_id: commitId,
                 body: "This comment was auto-added: `logic new_string`",
                 path: file,
-                start_line: parseInt(line), // Match to GitHub diff line
-                side: "RIGHT"
+                position: position, // Correct diff position
               });
             }
+
+      # - name: Add comment to PR
+      #   uses: actions/github-script@v6
+      #   env:
+      #     COMMENT_LOCATIONS: ${{ env.comment_locations }}
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     script: |
+      #       const { owner, repo } = context.repo;
+      #       const branch = "${{ steps.create_branch.outputs.branch }}";
+
+      #       // Fetch the PR associated with the branch
+      #       const prs = await github.rest.pulls.list({ owner, repo, head: branch });
+      #       if (prs.data.length === 0) {
+      #         console.log("No PR found for the branch.");
+      #         return;
+      #       }
+      #       const prNumber = prs.data[0].number;
+
+      #       // Fetch the PR diff
+      #       const { data: filesChanged } = await github.rest.pulls.listFiles({ owner, repo, pull_number: prNumber });
+
+      #       // Parse the diff and match lines
+      #       const commentLocations = process.env.COMMENT_LOCATIONS.split('|').filter(Boolean);
+      #       for (const location of commentLocations) {
+      #         const [file, line] = location.split(':');
+      #         const fileDetails = filesChanged.find(f => f.filename === file);
+              
+      #         if (!fileDetails) {
+      #           console.log(`File ${file} not found in PR diff`);
+      #           continue;
+      #         }
+
+      #         // Post a comment on the file
+      #         await github.rest.pulls.createReviewComment({
+      #           owner,
+      #           repo,
+      #           pull_number: prNumber,
+      #           body: "This comment was auto-added: `logic new_string`",
+      #           path: file,
+      #           start_line: parseInt(line), // Match to GitHub diff line
+      #           side: "RIGHT"
+      #         });
+      #       }
       # - name: Comment on the Pull Request
       #   uses: actions/github-script@v6
       #   env:
