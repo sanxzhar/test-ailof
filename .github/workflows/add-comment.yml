@@ -122,7 +122,7 @@ jobs:
       - name: Comment on the Pull Request
         uses: actions/github-script@v6
         env:
-          COMMENT_LOCATIONS: ${{ env.comment_locations }}
+          COMMENT_LOCATIONS: ${{ env.new_line_locations }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
