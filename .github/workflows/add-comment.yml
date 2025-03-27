@@ -49,26 +49,26 @@ jobs:
         run: |
           echo "Modified files: ${{ steps.find_files.outputs.files }}"
       
-      - name: Append comment to modified files
+      - name: Append comment to modified files and track line numbers
         id: track_changes
         run: |
-          NEW_LINE="logic new_string"
+          COMMENT="\nlogic new_string"
           CHANGED_FILES="${{ steps.find_files.outputs.files }}"
-          NEW_LINE_LOCATION=""
+          COMMENT_LOCATIONS=""
 
           for file in $CHANGED_FILES; do
             echo "Processing file: $file"
             if [ -f "$file" ]; then
-              LINE_NUMBER=$(wc -l < "$file")  # Get the last line number
-              echo "$NEW_LINE" >> "$file"      # Append comment to file
+              LINE_NUMBER=$(wc -l < "$file")  # Get last line number
+              echo "$COMMENT" >> "$file"      # Append comment
               echo "Appended comment to $file at line $LINE_NUMBER"
 
-              # Store file and line number for later use
-              NEW_LINE_LOCATION="$NEW_LINE_LOCATION|$file:$LINE_NUMBER"
+              # Store file & line number for later use
+              COMMENT_LOCATIONS="$COMMENT_LOCATIONS|$file:$LINE_NUMBER"
             fi
           done
 
-          echo "new_line_locations=$NEW_LINE_LOCATION" >> $GITHUB_ENV
+          echo "comment_locations=$COMMENT_LOCATIONS" >> $GITHUB_ENV
       
       - name: Print changes
         run: |
@@ -119,39 +119,82 @@ jobs:
 
             console.log(`Pull request created: ${pr.html_url}`);
 
-      - name: Comment on the Pull Request
+      - name: Add comment to PR
         uses: actions/github-script@v6
         env:
-          COMMENT_LOCATIONS: ${{ env.new_line_locations }}
+          COMMENT_LOCATIONS: ${{ env.comment_locations }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
-            const prNumber = (await github.rest.pulls.list({
-              owner,
-              repo,
-              head: "${{ steps.create_branch.outputs.branch }}"
-            })).data[0]?.number;
+            const branch = "${{ steps.create_branch.outputs.branch }}";
 
-            if (!prNumber) {
+            // Fetch the PR associated with the branch
+            const prs = await github.rest.pulls.list({ owner, repo, head: branch });
+            if (prs.data.length === 0) {
               console.log("No PR found for the branch.");
               return;
             }
+            const prNumber = prs.data[0].number;
 
+            // Fetch the PR diff
+            const { data: filesChanged } = await github.rest.pulls.listFiles({ owner, repo, pull_number: prNumber });
+
+            // Parse the diff and match lines
             const commentLocations = process.env.COMMENT_LOCATIONS.split('|').filter(Boolean);
-
             for (const location of commentLocations) {
               const [file, line] = location.split(':');
-              console.log(`Commenting on ${file} at line ${line}`);
+              const fileDetails = filesChanged.find(f => f.filename === file);
+              
+              if (!fileDetails) {
+                console.log(`File ${file} not found in PR diff`);
+                continue;
+              }
 
+              // Post a comment on the file
               await github.rest.pulls.createReviewComment({
                 owner,
                 repo,
                 pull_number: prNumber,
                 body: "This comment was auto-added: `logic new_string`",
-                commit_id: context.sha,
                 path: file,
-                line: parseInt(line),
-                side: "RIGHT"  // Ensures comment appears on the correct side of the diff
+                start_line: parseInt(line), // Match to GitHub diff line
+                side: "RIGHT"
               });
             }
+      # - name: Comment on the Pull Request
+      #   uses: actions/github-script@v6
+      #   env:
+      #     COMMENT_LOCATIONS: ${{ env.new_line_locations }}
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     script: |
+      #       const { owner, repo } = context.repo;
+      #       const prNumber = (await github.rest.pulls.list({
+      #         owner,
+      #         repo,
+      #         head: "${{ steps.create_branch.outputs.branch }}"
+      #       })).data[0]?.number;
+
+      #       if (!prNumber) {
+      #         console.log("No PR found for the branch.");
+      #         return;
+      #       }
+
+      #       const commentLocations = process.env.COMMENT_LOCATIONS.split('|').filter(Boolean);
+
+      #       for (const location of commentLocations) {
+      #         const [file, line] = location.split(':');
+      #         console.log(`Commenting on ${file} at line ${line}`);
+
+      #         await github.rest.pulls.createReviewComment({
+      #           owner,
+      #           repo,
+      #           pull_number: prNumber,
+      #           body: "This comment was auto-added: `logic new_string`",
+      #           commit_id: context.sha,
+      #           path: file,
+      #           line: parseInt(line),
+      #           side: "RIGHT"  // Ensures comment appears on the correct side of the diff
+      #         });
+      #       }
