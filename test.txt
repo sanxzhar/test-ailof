@@ -1,1 +1,1 @@
-Salem alem!
+Salem alem!\nlogic new_string
