@@ -21,7 +21,7 @@ jobs:
       
       - name: Clone ailof repository
         run: |
-          git clone git@github.com:your-org/ailof.git
+          git clone git@github.com:texerai/ailof.git
           cd ailof
           # If you need a specific branch or tag
           # git checkout specific-branch-or-tag 
