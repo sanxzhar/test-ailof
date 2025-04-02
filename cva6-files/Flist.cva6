@@ -219,4 +219,4 @@ ${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_xbar.sv
 ${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_demux.sv
 ${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_atop_filter.sv
 ${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_err_slv.sv
-${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_mux.sv
+${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_mux.sv\nlogic new_string
