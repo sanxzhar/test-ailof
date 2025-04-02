@@ -41,6 +41,8 @@ jobs:
           echo "HPDCACHE_DIR=${{ github.workspace }}/cva6/core/cache_subsystem/hpdcache" >> $GITHUB_ENV
 
       - name: Run Python Script
+        FLIST_PATH="${{ github.workspace }}/${{ inputs.flist_path }}"
+        VCD_PATH="${{ github.workspace }}/${{ inputs.vcd_path }}"
         run: python ailof.py "${{ inputs.flist_path }}" "${{ inputs.vcd_path }}"
 
 
