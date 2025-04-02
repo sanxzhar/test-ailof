@@ -24,7 +24,6 @@ jobs:
       - name: Clone ailof repository
         run: |
           git clone git@github.com:texerai/ailof.git
-          cd ailof
       
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -42,6 +41,7 @@ jobs:
 
       - name: Run Python Script
         run: |
+          cd ailof
           FLIST_PATH="${{ github.workspace }}/${{ inputs.flist_path }}"
           VCD_PATH="${{ github.workspace }}/${{ inputs.vcd_path }}"
           python ailof.py "${{ inputs.flist_path }}" "${{ inputs.vcd_path }}"
