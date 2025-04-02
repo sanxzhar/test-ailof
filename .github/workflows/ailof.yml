@@ -16,6 +16,9 @@ jobs:
   run_script:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Set up SSH key for private repo access
         uses: webfactory/ssh-agent@v0.8.0
         with:
@@ -24,9 +27,6 @@ jobs:
       - name: Clone ailof repository
         run: |
           git clone git@github.com:texerai/ailof.git
-      
-      - name: Checkout Repository
-        uses: actions/checkout@v4
 
       - name: Set Up Python
         uses: actions/setup-python@v5
