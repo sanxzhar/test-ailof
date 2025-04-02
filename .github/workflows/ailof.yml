@@ -1,17 +1,19 @@
 name: Ailof
 
 on:
-  push:
-    branches:
-      - main
-
-permissions:
-  contents: write
-  pull-requests: write
+  workflow_dispatch:
+    inputs:
+      flist_path:
+        description: "Path to the flist file"
+        required: true
+        type: string
+      vcd_path:
+        description: "Path to the VCD file"
+        required: true
+        type: string
 
 jobs:
-  ailof:
-    name: ailof
+  run_script:
     runs-on: ubuntu-latest
     steps:
       - name: Set up SSH key for private repo access
@@ -23,8 +25,22 @@ jobs:
         run: |
           git clone git@github.com:texerai/ailof.git
           cd ailof
-          # If you need a specific branch or tag
-          # git checkout specific-branch-or-tag 
+      
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      
+      - name: Set Environment Variables
+        run: |
+          echo "CVA6_REPO_DIR=${{ github.workspace }}/cva6" >> $GITHUB_ENV
+          echo "TARGET_CFG=build" >> $GITHUB_ENV
+          echo "HPDCACHE_DIR=${{ github.workspace }}/cva6/core/cache_subsystem/hpdcache" >> $GITHUB_ENV
+
+      - name: Run Python Script
+        run: python ailof.py "${{ inputs.flist_path }}" "${{ inputs.vcd_path }}"
 
 
